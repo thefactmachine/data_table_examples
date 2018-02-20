@@ -1,0 +1,105 @@
+---
+title: "data_table_basics"
+author: "Mark Hatcher"
+date: "20/02/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data table basics
+
+### Tutorial source
+This is a [link](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html) to the tutorial source.
+
+Set up the environment
+
+```{r message = FALSE}
+rm(list = ls())
+options(stringsAsFactors = FALSE)
+library(data.table)
+library(dplyr)
+```
+
+Load in the flights and print out the top 5 and bottom five rows
+
+```{r}
+flights <- fread("data//flights14.csv")
+flights %>% head()
+```
+
+### Strings are not converted to factors
+
+```{r}
+DT = data.table(ID = c("b","b","b","a","a","c"), a = 1:6, b = 7:12, c = 13:18)
+DT$ID %>% class()
+# print the number of rows to display
+getOption("datatable.print.nrows")
+```
+
+## Basic syntax
+This is row, column and grouping...
+
+### Filtering
+```{r}
+flights[origin == "JFK" & month == 6L]
+flights[1:2]
+```
+
+### Selecting columns
+
+```{r}
+# this returns a vector
+flights[, arr_delay] %>% class()
+
+# this returns a data.table
+flights[, list(arr_delay)] %>% class()
+
+# this is a synonym to a list
+flights[, .(arr_delay, dep_delay)] %>% head()
+
+# this is how we can change names
+flights[, .(arrival = arr_delay, departure = dep_delay)] %>% head()
+```
+
+### Column Expressions
+```{r}
+# how many trips had a total delay that was minus  (arrived before or departed before)
+flights[, sum((arr_delay + dep_delay) < 0)]
+
+# what is the average delay for JFK origin flights in June
+flights[origin == "JFK" & month == 6L,  .(delay = mean(dep_delay))]
+```
+
+### Data table can optimise
+Because the three i, j and by are inside [...] data.table can optimise
+the query before evaluation...rather than each separately...
+
+
+### Counting things -- the .N operator
+
+```{r}
+flights[origin == "JFK" & month == 6L, .N]
+```
+
+### Using the data.frame syntax to select columns
+
+```{r}
+# the following with = FALSE allows us to use data.frame syntax
+flights[1:4, c("arr_delay", "dep_delay"), with = FALSE]
+
+# this gives a different result
+flights[1:4, c("arr_delay", "dep_delay"), with = TRUE]
+```
+with = TRUE is default in data.table because we can  do much more by allowing j to handle expressions
+
+### Ordering things
+```{r}
+flights[order(origin, -dest)] %>% head()
+```
+
+
+
+

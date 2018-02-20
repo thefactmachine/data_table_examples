@@ -1,0 +1,157 @@
+---
+title: "data table beyond the basics"
+author: "Mark Hatcher"
+date: "20/02/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Beyond the basics
+
+### Tutorial source
+This is a [link](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html) to the tutorial source.
+
+Set up the environment
+
+```{r message = FALSE}
+rm(list = ls())
+options(stringsAsFactors = FALSE)
+library(data.table)
+library(dplyr)
+```
+
+Load in the flights and print out the top 5 and bottom five rows
+
+```{r}
+flights <- fread("data//flights14.csv")
+flights %>% head()
+```
+
+## Basic groupby
+
+```{r}
+flights[, .(.N), by = .(origin)]
+```
+
+### Grouping by more than one column
+
+```{r}
+flights[, .(.N), by = c("origin", "dest")] %>% head()
+```
+
+We can filter and we can name the aggregated column
+
+```{r}
+flights[carrier == "AA", .(count = .N ), by = origin]
+```
+
+### Sorting groups using keyby
+Data.table retains the original order of groups. This is intentional
+and by design.  But at times we would automatically like to sort
+by the variables that we grouped by.  "keyby" lets us sort by
+groups **Use keyby to sort groups instead of key**
+
+```{r}
+flights[carrier == "AA", .
+        (delay = mean(arr_delay)), keyby = .(origin, dest)] %>% head()
+```
+
+## Chaining
+We can keep tacking on expressions.....[][][][]....
+
+```{r}
+flights[carrier == "AA", .(count = .N), by = .(origin, dest)][order(-count)][1:4]
+```
+
+## Expressions in By
+In the following we are grouping on logical expressions and then counting the result
+
+```{r}
+flights[, .N, .(dep_delay > 0, arr_delay > 0)]
+```
+
+## Special symbol .SD
+
+```{r}
+# set up a data.frame for the following
+vct_id <- c("b", "b", "b", "a", "a", "c")
+vct_a <- c(1, 2, 3, 4, 5, 6)
+vct_b <- c(7, 8, 9, 10, 11, 12)
+vct_c <- c(13, 14, 15, 16, 17, 18)
+DT <- data.table(ID = vct_id, a = vct_a, b = vct_b, c = vct_c)
+DT
+```
+
+.SD stands for subset of data.  It by itself is a data.frame that holds the data for the current group defined using "by"
+
+```{r}
+# This returns things in the same order in which they were defined
+DT[, print(.SD), by = ID]
+```
+
+This enables us to apply functions to columns.
+
+Above we group by ID and this results in three groups.  Now what if we wanted to find the mean of each group
+and do this for all columns.
+
+```{r}
+DT[, lapply(.SD, mean), by = ID]
+```
+
+### How can we specify the columns that we computer the mean on
+
+```{r}
+flights[carrier == "AA",
+  lapply(.SD, mean),
+  by = .(origin, dest, month),
+  .SDcols = c("arr_delay", "dep_delay")] %>% head()
+```
+
+### Show the first N rows of a group
+```{r}
+# show the first two entries for each month
+flights[, head(.SD, 2), by = month] %>% head(6)
+```
+
+### Concatenating columns
+In this example, for the index b we have the first three rows of **a** being 1, 2, 3.
+And, we have the first few rows of **b** being 7,8 9
+
+```{r}
+# create a column called val.
+# group by ID and then concatenate...
+# basically doubles the number of rows
+DT[, .(val = c(a,b)), by = ID] %>% head()
+```
+
+In the following, we cast the result to be list
+For the column val, each row is **actually a list**
+There will be three rows -- a row for each value in the group
+
+```{r}
+DT[, print(c(a,b)), by = ID]
+```
+
+This prints to screen:
+```{r}
+DT[, print(c(a,b)), by = ID]
+```
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
