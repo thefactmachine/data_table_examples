@@ -152,3 +152,125 @@ flights[, head(.SD, 2), by = origin]
 
 
 DT[, .(val = c(a,b)), by = ID] 
+
+## We will see how to add/update/delete columns by reference and how to combine them with i and by in the next vignette.
+#  https://cran.r-project.org/web/packages/data.table/vignettes/datatable-keys-fast-subset.html
+
+
+
+rm(list = ls())
+options(stringsAsFactors = FALSE)
+library(data.table)
+library(dplyr)
+
+flights <- fread("data//flights14.csv")
+
+set.seed(1L)
+DF = data.frame(ID1 = sample(letters[1:2], 10, TRUE),
+                ID2 = sample(1:3, 10, TRUE),
+                val = sample(10),
+                stringsAsFactors = FALSE,
+                row.names = sample(LETTERS[1:10]))
+
+rownames(DF)
+
+# we can subset a particular row using its row name as shown below
+DF["C", ]
+
+# we can set keys on multiple columns and the columns can be different types
+# integer, numeric, character, factor
+
+#duplicate keys are allowed
+
+# setting a key does two things: 
+# 1) physically reorders the rows of the data.table providing by
+# reference -- always in increasing order. 
+
+# 2) marks those columns as key columns by setting an attribute
+# called sorted to the data.table.
+
+# since the rows are reordered a data.table can have at most one
+# key because it cannot be sorted in more than one way.
+
+ls()
+
+# set the column origin as key in the data.table flights.
+setkey(flights, origin)
+head(flights)
+
+## alternatively we can provide character vectors to the function 'setkeyv()'
+# setkeyv(flights, "origin") # useful to program with
+
+setkeyv(flights, "origin") 
+
+# := function we saw in the “Introduction to data.table”
+
+# You can also set keys directly when creating data.tables using the data.table()
+# function using key argument. It takes a character vector of column names.
+
+# Once you key a data.table by certain columns, 
+# you can subset by querying those key columns using the .() notation 
+# in i.
+
+# this uses the key column origin
+flights[.("JFK")]
+
+# On single column key of character type, you can drop the .() notation
+
+# can do multiple columns
+flights[c("JFK", "LGA")] 
+## same as flights[.(c("JFK", "LGA"))]
+
+# finding out what columns the data.table is keyed by
+key(flights)
+
+# =============================================
+# Keys and multiple columns ===================
+# =============================================
+
+setkey(flights, origin, dest)
+
+# or alternately
+# setkeyv(flights, c("origin", "dest")
+
+key(flights)
+
+# subset where first col = JFK and 2 col = MIA
+flights[.("JFK", "MIA")]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
