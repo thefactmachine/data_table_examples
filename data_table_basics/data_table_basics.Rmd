@@ -16,7 +16,7 @@ This is a [link](https://cran.r-project.org/web/packages/data.table/vignettes/da
 
 Set up the environment
 
-```{r message = FALSE}
+```{r chunk_name_mark, echo=FALSE, message=FALSE}
 rm(list = ls())
 options(stringsAsFactors = FALSE)
 library(data.table)
@@ -67,13 +67,14 @@ flights[, .(arrival = arr_delay, departure = dep_delay)] %>% head()
 ### Column Expressions
 ```{r}
 # how many trips had a total delay that was minus  (arrived before or departed before)
+# prints a single number
 flights[, sum((arr_delay + dep_delay) < 0)]
 
 # what is the average delay for JFK origin flights in June
 flights[origin == "JFK" & month == 6L,  .(delay = mean(dep_delay))]
 ```
 
-### Data table can optimise
+## Data table can optimise
 Because the three i, j and by are inside [...] data.table can optimise
 the query before evaluation...rather than each separately...
 
@@ -90,7 +91,7 @@ flights[origin == "JFK" & month == 6L, .N]
 # the following with = FALSE allows us to use data.frame syntax
 flights[1:4, c("arr_delay", "dep_delay"), with = FALSE]
 
-# this gives a different result
+# this gives a different result - I cant see any difference.
 flights[1:4, c("arr_delay", "dep_delay"), with = TRUE]
 ```
 with = TRUE is default in data.table because we can  do much more by allowing j to handle expressions

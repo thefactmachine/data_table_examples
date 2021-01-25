@@ -56,12 +56,12 @@ by the variables that we grouped by.  "keyby" lets us sort by
 groups **Use keyby to sort groups instead of key**
 
 ```{r}
-flights[carrier == "AA", .
-        (delay = mean(arr_delay)), keyby = .(origin, dest)] %>% head()
+flights[carrier == "AA", .(delay = mean(arr_delay)), 
+        keyby = .(origin, dest)] %>% head()
 ```
 
 ## Chaining
-We can keep tacking on expressions.....[][][][]....
+We can keep tacking on expressions.....[][][][]
 
 ```{r}
 flights[carrier == "AA", .(count = .N), by = .(origin, dest)][order(-count)][1:4]
@@ -72,6 +72,8 @@ In the following we are grouping on logical expressions and then counting the re
 
 ```{r}
 flights[, .N, .(dep_delay > 0, arr_delay > 0)]
+
+flights[, .N, by = .(dep_delay > 0, arr_delay > 0)]
 ```
 
 ## Special symbol .SD
@@ -86,6 +88,8 @@ DT <- data.table(ID = vct_id, a = vct_a, b = vct_b, c = vct_c)
 DT
 ```
 
+## The mighty .SD
+
 .SD stands for subset of data.  It by itself is a data.frame that holds the data for the current group defined using "by"
 
 ```{r}
@@ -98,17 +102,36 @@ This enables us to apply functions to columns.
 Above we group by ID and this results in three groups.  Now what if we wanted to find the mean of each group
 and do this for all columns.
 
+There are 3 groups. And 3 columns. So there will be 9 means created.
+
 ```{r}
 DT[, lapply(.SD, mean), by = ID]
 ```
 
 ### How can we specify the columns that we computer the mean on
 
+
+
 ```{r}
+# 200 groups
+flights[carrier == "AA", .N, by = .(origin, dest, month)] %>% nrow()
+
+# have a look at the output here
+flights[1:100, print(.SD), by = .(origin, dest, month), 
+        .SDcols = c("arr_delay", "dep_delay")]
+
+# we know there are 200 groups.  And there are two columns we create summary
+# information for.  That makes it 200 rows by 5 columns
 flights[carrier == "AA",
   lapply(.SD, mean),
   by = .(origin, dest, month),
   .SDcols = c("arr_delay", "dep_delay")] %>% head()
+
+flights[carrier == "AA",
+  lapply(.SD, mean),
+  by = .(origin, dest, month),
+  .SDcols = c("arr_delay", "dep_delay")] %>% dim()
+
 ```
 
 ### Show the first N rows of a group
@@ -126,22 +149,22 @@ And, we have the first few rows of **b** being 7,8 9
 # group by ID and then concatenate...
 # basically doubles the number of rows
 DT[, .(val = c(a,b)), by = ID] %>% head()
+
+
+# DTa <- DT[, .(ID, val = c(a,b))
+
+
 ```
 
 In the following, we cast the result to be list
 For the column val, each row is **actually a list**
 There will be three rows -- a row for each value in the group
 
+
 ```{r}
+# this shows how its done
 DT[, print(c(a,b)), by = ID]
 ```
-
-This prints to screen:
-```{r}
-DT[, print(c(a,b)), by = ID]
-```
-
----
 
 
 
